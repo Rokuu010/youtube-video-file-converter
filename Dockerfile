@@ -16,8 +16,8 @@ FROM openjdk:23-jdk-slim
 # Install Python and pip to run yt-dlp
 RUN apt-get update && apt-get install -y python3 python3-pip && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp using pip
-RUN pip3 install yt-dlp
+# Install yt-dlp using pip, overriding the security warning
+RUN pip3 install yt-dlp --break-system-packages
 
 # Copy the JAR file from the build stage to the final image
 COPY --from=build /app/target/*.jar app.jar
