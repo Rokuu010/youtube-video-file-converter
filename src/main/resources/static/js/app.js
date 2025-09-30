@@ -129,7 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
         pollInterval = setInterval(async () => {
             try {
                 // I ask my server for the progress of the specific job.
-                const response = await fetch(`/progress/${jobId}`);
+                // I added a timestamp to the URL to prevent the browser from caching the result.
+                const response = await fetch(`/progress/${jobId}?_=${new Date().getTime()}`);
                 if (response.status === 404) {
                     clearInterval(pollInterval);
                     return;
@@ -181,3 +182,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
