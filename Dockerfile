@@ -13,6 +13,12 @@ RUN mvn clean package -DskipTests
 # Use a smaller base image for the final application, based on JDK 23
 FROM openjdk:23-jdk-slim
 
+# Install Python and pip to run yt-dlp
+RUN apt-get update && apt-get install -y python3 python3-pip && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install yt-dlp using pip
+RUN pip3 install yt-dlp
+
 # Copy the JAR file from the build stage to the final image
 COPY --from=build /app/target/*.jar app.jar
 
