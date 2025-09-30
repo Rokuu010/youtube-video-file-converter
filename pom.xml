@@ -1,40 +1,43 @@
+// This is the file that manages my project's dependencies and build process. It's called the Project Object Model, or POM.
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot Parent: Provides sensible default configurations -->
+    // I'm inheriting from the Spring Boot parent POM to get all the default configurations.
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.4</version> <!-- Upgraded from 3.3.1 to latest stable -->
-        <relativePath/> <!-- lookup parent from repository -->
-    </parent>
+        <version>3.3.4</version>
+        <relativePath/> </parent>
 
+    // This is the unique identifier for my project.
     <groupId>com.example</groupId>
     <artifactId>video-converter</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>video-converter</name>
     <description>A simple video converter web service using Spring Boot, Thymeleaf, and JavaCV.</description>
 
+    // I'm setting the Java version for my project to 23.
     <properties>
         <java.version>23</java.version>
     </properties>
 
+    // Here's where I declare all the libraries my project needs.
     <dependencies>
-        <!-- For building web applications and REST APIs -->
+        // This is for building the web application part.
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Thymeleaf: for serving HTML templates -->
+        // This is for the frontend, so I can create dynamic HTML pages.
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
-        <!-- JavaCV: A Java wrapper for FFmpeg and other computer vision libraries -->
+        // This is the core library I'm using to handle the video conversion. It's a wrapper for FFmpeg.
         <dependency>
             <groupId>org.bytedeco</groupId>
             <artifactId>javacv-platform</artifactId>
@@ -42,9 +45,10 @@
         </dependency>
     </dependencies>
 
+    // This section is for managing dependency versions.
     <dependencyManagement>
         <dependencies>
-            <!-- Override vulnerable logback-core -->
+            // I'm explicitly setting the version for this library to override a potential security vulnerability.
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
@@ -53,9 +57,10 @@
         </dependencies>
     </dependencyManagement>
 
+    // This is for configuring how my project gets built and packaged.
     <build>
         <plugins>
-            <!-- Plugin to package the application as an executable JAR -->
+            // This plugin is what turns my project into a runnable JAR file.
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
