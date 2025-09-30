@@ -28,6 +28,10 @@ public class YoutubeController {
     @Value("${app.download-dir}")
     private String downloadDir;
 
+    // This is the path where I'll expect cookies.txt to live.
+    @Value("${app.cookies-file:}")
+    private String cookiesFile;
+
     // I'm using constructor injection, which is Spring's recommended way to manage dependencies.
     public YoutubeController(ConversionService conversionService, ProgressService progressService) {
         this.conversionService = conversionService;
@@ -78,8 +82,15 @@ public class YoutubeController {
     // This helper method's only job is to get the YouTube video's title.
     private String fetchYoutubeTitle(String youtubeUrl) {
         try {
-            // I'm running the 'yt-dlp' command with the '--get-title' flag.
-            ProcessBuilder pb = new ProcessBuilder("yt-dlp", "--get-title", youtubeUrl);
+            ProcessBuilder pb;
+            if (cookiesFile != null && !cookiesFile.isEmpty() && new File(cookiesFile).exists()) {
+                // If cookies.txt exists, I include it in the yt-dlp command.
+                pb = new ProcessBuilder("yt-dlp", "--cookies", cookiesFile, "--get-title", youtubeUrl);
+            } else {
+                // Otherwise, I run it without cookies.
+                pb = new ProcessBuilder("yt-dlp", "--get-title", youtubeUrl);
+            }
+
             Process process = pb.start();
 
             // I need to read the output of the command to capture the title.
@@ -101,13 +112,29 @@ public class YoutubeController {
 
     // This helper method runs the main yt-dlp command to download the video and audio.
     private int runYtDlp(String youtubeUrl, String outputTemplate) throws IOException, InterruptedException {
-        ProcessBuilder pb = new ProcessBuilder(
-                "yt-dlp",
-                "--no-playlist",         // I only want to download a single video, not a whole playlist.
-                "-f", "bv*+ba/b",        // This flag tells it to get the best available video and audio streams.
-                "-o", outputTemplate,    // This is the filename pattern for the downloaded file.
-                youtubeUrl
-        );
+        ProcessBuilder pb;
+
+        if (cookiesFile != null && !cookiesFile.isEmpty() && new File(cookiesFile).exists()) {
+            // If cookies.txt exists, I include it in the yt-dlp command.
+            pb = new ProcessBuilder(
+                    "yt-dlp",
+                    "--cookies", cookiesFile,
+                    "--no-playlist",         // I only want to download a single video, not a whole playlist.
+                    "-f", "bv*+ba/b",        // This flag tells it to get the best available video and audio streams.
+                    "-o", outputTemplate,    // This is the filename pattern for the downloaded file.
+                    youtubeUrl
+            );
+        } else {
+            // Otherwise, I run it without cookies.
+            pb = new ProcessBuilder(
+                    "yt-dlp",
+                    "--no-playlist",
+                    "-f", "bv*+ba/b",
+                    "-o", outputTemplate,
+                    youtubeUrl
+            );
+        }
+
         pb.inheritIO(); // This pipes the command's output to my console, which makes it easier for debugging.
         Process process = pb.start();
         return process.waitFor(); // I wait for the download to complete and return its exit code.
