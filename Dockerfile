@@ -1,5 +1,5 @@
-# Use a Maven image to build the application, specifying JDK 23
-FROM maven:3.9.6-openjdk-23 AS build
+# Use a Maven image that supports OpenJDK 23
+FROM maven:latest AS build
 
 # Set the working directory
 WORKDIR /app
@@ -12,6 +12,17 @@ RUN mvn clean package -DskipTests
 
 # Use a smaller base image for the final application, based on JDK 23
 FROM openjdk:23-jdk-slim
+
+# Install Python, pip, AND FFMPEG to run yt-dlp and perform conversions
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    ffmpeg && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install yt-dlp using pip, overriding the security warning
+RUN pip3 install yt-dlp --break-system-packages
 
 # Copy the JAR file from the build stage to the final image
 COPY --from=build /app/target/*.jar app.jar
