@@ -1,5 +1,5 @@
-# Use a Maven image to build the application, specifying JDK 23
-FROM maven:3.9.6-openjdk-23 AS build
+# Use a Maven image that supports OpenJDK 23
+FROM maven:latest AS build
 
 # Set the working directory
 WORKDIR /app
