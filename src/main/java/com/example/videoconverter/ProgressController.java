@@ -26,16 +26,17 @@ public class ProgressController {
         // I fetch the current status of the job using its ID.
         ProgressService.JobStatus status = progressService.getJobStatus(jobId);
 
-        // If the job doesn't exist (maybe it's already cleaned up), I send a 404 Not Found response.
+        // If the job doesn't exist, I send a 404 Not Found response.
         if (status == null) {
             return ResponseEntity.notFound().build();
         }
 
         // I return a JSON object with both the progress percentage and the final filename.
         // My JavaScript uses this to update the progress bar.
+        // I'm now using the public getter methods to access the private fields.
         return ResponseEntity.ok(Map.of(
-                "progress", status.progress,
-                "fileName", status.finalFileName
+                "progress", status.getProgress(),
+                "fileName", status.getFileName()
         ));
     }
 
@@ -45,17 +46,19 @@ public class ProgressController {
         ProgressService.JobStatus status = progressService.getJobStatus(jobId);
 
         // I do a quick check to make sure the job actually exists and is fully complete before trying to send the file.
-        if (status == null || status.progress < 100 || status.resultPath == null) {
+        // I'm using the getter methods here as well.
+        if (status == null || status.getProgress() < 100 || status.getFilePath() == null) {
             return ResponseEntity.notFound().build();
         }
 
-        File file = new File(status.resultPath);
+        File file = new File(status.getFilePath());
+        String filePath = status.getFilePath();
 
         // I get the file extension (like ".mp3") from the temporary file's path.
-        String extension = status.resultPath.substring(status.resultPath.lastIndexOf("."));
+        String extension = filePath.substring(filePath.lastIndexOf("."));
 
-        // I create the final, user-friendly filename by combining the stored name (e.g., "My Video") with the extension.
-        String finalFileName = status.finalFileName + extension;
+        // I create the final, filename by combining the stored name (e.g., "My Video") with the extension.
+        String finalFileName = status.getFileName() + extension;
 
         // After getting all the info I need, I remove the job to keep my service clean.
         progressService.removeJob(jobId);

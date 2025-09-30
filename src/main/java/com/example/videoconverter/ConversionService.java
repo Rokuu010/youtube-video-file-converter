@@ -2,11 +2,13 @@ package com.example.videoconverter;
 
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 
 // This is the core of my application, where the actual video and audio conversion happens.
@@ -16,6 +18,10 @@ public class ConversionService {
 
     // I need the ProgressService to report back on how the conversion is going.
     private final ProgressService progressService;
+
+    // I'm injecting the download directory path to use for my output files.
+    @Value("${app.download-dir}")
+    private String outputDir;
 
     // This is the constructor. Spring automatically provides the ProgressService instance for me here.
     public ConversionService(ProgressService progressService) {
@@ -28,8 +34,22 @@ public class ConversionService {
     public void convertFile(File input, String format, String jobId) {
         File output = null;
         try {
-            // This creates a unique temporary file for the output to avoid naming conflicts.
-            output = File.createTempFile("output-" + UUID.randomUUID(), "." + format);
+            // I get the clean filename that was saved by the YoutubeController.
+            String fileName = progressService.getJobFileName(jobId);
+
+            // If the filename is missing for some reason, I create a safe fallback name.
+            if (fileName == null || fileName.isBlank()) {
+                fileName = "output-" + jobId;
+            }
+
+            // I construct the full path for the final output file, ensuring it has the correct name and format.
+            Path outputPath = Path.of(outputDir, fileName + "." + format);
+
+            // I make sure the output directory exists before trying to save the file.
+            Files.createDirectories(outputPath.getParent());
+
+            output = outputPath.toFile();
+
 
             // FFmpegFrameGrabber from the javacv library is what I use to read the input file frame by frame.
             try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(input)) {
