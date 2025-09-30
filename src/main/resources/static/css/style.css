@@ -1,0 +1,207 @@
+/* This is where I defined all my primary fonts and colors for my theme. */
+:root {
+    --font-header: 'Bangers', cursive;
+    --font-body: 'DotGothic16', sans-serif;
+    --bg-color: #f0f0f0;
+    --panel-color: #1a1a1a;
+    --text-color-dark: #1a1a1a;
+    --text-color-light: #f0f0f0;
+    --accent-color: #ff3c3c;
+    --border-color: #1a1a1a;
+}
+
+/* I set the base font for the page here and got rid of the default browser margins. */
+body {
+    font-family: var(--font-body);
+    margin: 0;
+    padding: 0;
+    color: var(--text-color-dark);
+}
+
+/* I created this main container to hold my two-column layout. */
+.main-container {
+    display: flex;
+    width: 100vw;
+    min-height: 100vh;
+}
+
+/* This styles the dark panel on the left side of the screen. */
+.left-panel {
+    flex: 1; /* This makes it take up half the screen width. */
+    background-color: var(--panel-color);
+    color: var(--text-color-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* This is the container for my large title text. */
+.title-block {
+    text-align: center;
+    transform: rotate(-5deg); /* I tilted the title to give it a more dynamic look. */
+}
+
+/* Here I styled the main "VC" title. */
+.title-block h1 {
+    font-family: var(--font-header);
+    font-size: 10rem;
+    line-height: 0.8;
+    margin: 0;
+}
+
+/* And here's the styling for the "CONVERTER" subtitle. */
+.title-block h2 {
+    font-family: var(--font-header);
+    font-size: 4rem;
+    letter-spacing: 4px;
+    background-color: var(--accent-color);
+    color: var(--text-color-light);
+    padding: 0 1rem;
+}
+
+/* I added this subtle Japanese text to add to the aesthetic. */
+.title-block .japanese-text {
+    font-size: 3rem;
+    margin-top: 1rem;
+    color: var(--accent-color);
+    opacity: 0.5;
+}
+
+/* This styles the light panel on the right side. */
+.right-panel {
+    flex: 1; /* This takes up the other half of the screen. */
+    background-color: var(--bg-color);
+    /* I added this to create the dotted "screentone" background effect. */
+    background-image: radial-gradient(var(--text-color-dark) 1px, transparent 0);
+    background-size: 20px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+/* This is just a wrapper to keep the form from getting too wide. */
+.converter-wrapper {
+    width: 100%;
+    max-width: 450px;
+}
+
+/* The container for my Upload/YouTube toggle buttons. */
+.mode-switcher {
+    display: flex;
+    border: 3px solid var(--border-color);
+    margin-bottom: 25px;
+}
+
+/* Styling for the individual toggle buttons. */
+.mode-btn {
+    flex: 1;
+    background: white;
+    border: none;
+    padding: 10px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.mode-btn:first-child {
+    border-right: 3px solid var(--border-color);
+}
+
+/* My style for showing which button is currently active. */
+.mode-btn.active {
+    background: var(--accent-color);
+    color: white;
+}
+
+/* Styling for my form labels. */
+label {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* General styling for my input fields and dropdowns to give them a blocky look. */
+.form-control,
+.form-select {
+    border: 3px solid var(--border-color);
+    border-radius: 0; /* I used sharp corners for the manga style. */
+    box-shadow: none;
+    padding: 10px;
+    font-weight: 700;
+}
+
+/* This highlights the input field when I click on it. */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--accent-color);
+}
+
+/* Styling for my main "CONVERT" button. */
+.btn-convert {
+    background: var(--border-color);
+    color: white;
+    border: none;
+    border-radius: 0;
+    padding: 12px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    transition: all 0.2s ease;
+}
+
+/* The hover effect for the convert button. */
+.btn-convert:hover {
+    background: var(--accent-color);
+}
+
+/* Styling for the drag-and-drop file area. */
+.drop-area {
+    border: 3px dashed var(--border-color);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* My JavaScript adds this class when I drag a file over the area. */
+.drop-area.highlight {
+    background: #fff3f3;
+    border-color: var(--accent-color);
+}
+
+.drop-area i {
+    font-size: 2.5rem;
+}
+
+.drop-area p {
+    font-weight: 700;
+}
+
+/* The style for the text that shows the selected filename. */
+#file-name {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+/* The container for my progress bar. */
+.progress {
+    border: 3px solid var(--border-color);
+    border-radius: 0;
+    padding: 2px;
+}
+
+/* The actual progress bar element that fills up. */
+.progress-bar {
+    background-color: var(--accent-color);
+}
+
+/* The alert message box for success or failure messages. */
+.alert {
+    border: 3px solid var(--border-color);
+    border-radius: 0;
+    font-weight: 700;
+}
