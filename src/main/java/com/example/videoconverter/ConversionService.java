@@ -1,87 +1,68 @@
 package com.example.videoconverter;
 
 import org.bytedeco.ffmpeg.global.avcodec;
-import org.bytedeco.javacv.*;
-import org.springframework.beans.factory.annotation.Value;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.FFmpegFrameRecorder;
+import org.bytedeco.javacv.Frame;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
-// This is the core of my application, where the actual video and audio conversion happens.
-// I've marked it as a @Service so Spring Boot can manage it.
+// This service handles the core video/audio conversion logic.
 @Service
 public class ConversionService {
 
-    // I need the ProgressService to report back on how the conversion is going.
     private final ProgressService progressService;
 
-    // I'm injecting the download directory path to use for my output files.
-    @Value("${app.download-dir}")
-    private String outputDir;
-
-    // This is the constructor. Spring automatically provides the ProgressService instance for me here.
     public ConversionService(ProgressService progressService) {
         this.progressService = progressService;
     }
 
-    // I've marked this method as @Async so it runs on a background thread.
-    // This is the key to preventing the UI from freezing during a long conversion.
+    // This method runs on a background thread to keep the UI responsive.
     @Async
     public void convertFile(File input, String format, String jobId) {
         File output = null;
         try {
-            // I get the clean filename that was saved by the YoutubeController.
-            String fileName = progressService.getJobFileName(jobId);
+            // This saves the final file to the user's Downloads folder.
+            String userHome = System.getProperty("user.home");
+            Path downloadDirPath = Path.of(userHome, "Downloads");
 
-            // If the filename is missing for some reason, I create a safe fallback name.
-            if (fileName == null || fileName.isBlank()) {
-                fileName = "output-" + jobId;
+            // Ensure the Downloads directory exists.
+            if (!Files.exists(downloadDirPath)) {
+                Files.createDirectories(downloadDirPath);
             }
 
-            // I construct the full path for the final output file, ensuring it has the correct name and format.
-            Path outputPath = Path.of(outputDir, fileName + "." + format);
+            // Get the clean filename from the progress service and create the final path.
+            String finalFileName = progressService.getJobFileName(jobId);
+            output = downloadDirPath.resolve(finalFileName + "." + format).toFile();
 
-            // I make sure the output directory exists before trying to save the file.
-            Files.createDirectories(outputPath.getParent());
-
-            output = outputPath.toFile();
-
-
-            // FFmpegFrameGrabber from the javacv library is what I use to read the input file frame by frame.
             try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(input)) {
                 grabber.start();
 
-                // I switched to time-based progress because it's more reliable than counting frames.
-                // getLengthInTime() gives me the total duration in microseconds.
                 long totalDuration = grabber.getLengthInTime();
                 int lastReportedProgress = 0;
 
-                // Here, I check if the target format is audio-only.
                 boolean audioOnly = format.equalsIgnoreCase("mp3")
                         || format.equalsIgnoreCase("wav")
                         || format.equalsIgnoreCase("ogg");
 
-                // I get the video/audio properties from the original file to set up the output correctly.
                 int width = audioOnly ? 0 : grabber.getImageWidth();
                 int height = audioOnly ? 0 : grabber.getImageHeight();
                 int audioChannels = grabber.getAudioChannels();
 
-                // FFmpegFrameRecorder is what writes the new, converted file.
                 try (FFmpegFrameRecorder recorder =
                              new FFmpegFrameRecorder(output, width, height, audioChannels)) {
 
-                    // I set the output format and the correct audio/video codecs based on the user's choice.
                     recorder.setFormat(format);
                     if (audioOnly) {
-                        if (format.equalsIgnoreCase("wav")) {
+                        if ("wav".equalsIgnoreCase(format)) {
                             recorder.setAudioCodec(avcodec.AV_CODEC_ID_PCM_S16LE);
-                        } else if (format.equalsIgnoreCase("mp3")) {
+                        } else if ("mp3".equalsIgnoreCase(format)) {
                             recorder.setAudioCodec(avcodec.AV_CODEC_ID_MP3);
-                        } else if (format.equalsIgnoreCase("ogg")) {
+                        } else if ("ogg".equalsIgnoreCase(format)) {
                             recorder.setAudioCodec(avcodec.AV_CODEC_ID_VORBIS);
                         }
                     } else {
@@ -92,7 +73,6 @@ public class ConversionService {
                     recorder.setSampleRate(grabber.getSampleRate());
                     recorder.start();
 
-                    // This is the main loop where I read a frame, write a frame, and repeat.
                     Frame frame;
                     while ((frame = grabber.grab()) != null) {
                         if (audioOnly) {
@@ -103,33 +83,29 @@ public class ConversionService {
                             recorder.record(frame);
                         }
 
-                        // This is my progress reporting logic.
                         if (totalDuration > 0) {
                             long currentTimestamp = grabber.getTimestamp();
                             int progress = (int) (((double) currentTimestamp / totalDuration) * 100);
 
-                            // I only send an update if the percentage has actually changed, to be more efficient.
                             if (progress > lastReportedProgress) {
                                 lastReportedProgress = progress;
-                                progressService.setProgress(jobId, Math.min(progress, 99)); // Cap at 99 until it's truly done.
+                                progressService.setProgress(jobId, Math.min(progress, 99));
                             }
                         }
                     }
                 }
             }
-            // Once the loop is finished, I tell the ProgressService that the job is 100% complete.
+            // Once finished, mark the job as complete and provide the final path.
             progressService.setJobCompleted(jobId, output.getAbsolutePath());
 
         } catch (Exception e) {
-            // If anything goes wrong, I print the error and report a failure status (-1) to the frontend.
             e.printStackTrace();
-            progressService.setProgress(jobId, -1);
+            progressService.setProgress(jobId, -1); // Mark job as failed.
             if (output != null) {
                 output.delete();
             }
         } finally {
-            // This 'finally' block ensures that the temporary input file is always deleted,
-            // even if the conversion fails, which keeps my server clean.
+            // Delete the temporary input file to keep the system clean.
             try {
                 if (input != null) {
                     Files.deleteIfExists(input.toPath());
@@ -140,3 +116,4 @@ public class ConversionService {
         }
     }
 }
+
