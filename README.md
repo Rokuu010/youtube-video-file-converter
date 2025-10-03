@@ -55,7 +55,7 @@ You'll need a few things installed on your system first:
 
 1.  **Clone the repo:**
     ```sh
-    git clone [https://github.com/your-username/video-converter.git](https://github.com/your-username/video-converter.git)
+    git clone https://github.com/Rokuu010/youtube-video-file-converter.git
     ```
 2.  **Jump into the project directory:**
     ```sh
